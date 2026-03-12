@@ -11,17 +11,22 @@ function App() {
   // useState is a React hook , initial value (empty array)
    
   const handleAddTask = () => {
-    if (input.trim() !== '') 
+    const trimmedInput = input.trim();
+
+    if (trimmedInput === '')  return ;
+
+    if (tasks.includes(trimmedInput)) {
+      alert('Task already exists!');
       return;
+    }
+
+    setTasks([...tasks, trimmedInput]);
+    setInput('');
+  };
 
     //arrow fnction . stored inside constant 
     //it is called when th ebutton is clicked
     // trim() is used to remove whitespace from both ends of a string.
-
-
-    setTasks([...tasks, input]);
-    setInput('');
-  };
   //... is a spread operator which is used to create a new array
   //by copying the existing tasks and adding the new input at the end.
   //here it is copying all the items from tasks and adds new input at the end
@@ -59,17 +64,26 @@ function App() {
       </button>
 
       <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            {task}
-            <button onClick={() => handleDeleteTask(index)}>
-              ❌
-            </button>
-          </li>
-        ))}
-      </ul>
+  {tasks.length === 0 ? (
+    <p>No tasks yet 🚀</p>
+  ) : (
+    tasks.map((task, index) => (
+      <li key={index}>
+        {task}
+        <button
+          style={{ marginLeft: "10px", color: "red" }}
+          onClick={() => handleDeleteTask(index)}
+        >
+          ❌
+        </button>
+      </li>
+    ))
+  )}
+</ul>
     </div>
   );  
+  
+
   }
 
   export default App;
