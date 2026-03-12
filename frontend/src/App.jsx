@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useEffect } from "react";
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -10,19 +10,38 @@ function App() {
   // setInput = function to update the state value
   // useState is a React hook , initial value (empty array)
    
+  useEffect(() => {
+  fetch("http://localhost:5000/tasks")
+    .then((res) => res.json())
+    .then((data) => {
+      setTasks(data);
+    });
+}, []);
+
+//empty array means  run only when the component loads ,
+
+
+
   const handleAddTask = () => {
-    const trimmedInput = input.trim();
 
-    if (trimmedInput === '')  return ;
+  if (input.trim() === "") return;
 
-    if (tasks.includes(trimmedInput)) {
-      alert('Task already exists!');
-      return;
-    }
+  fetch("http://localhost:5000/tasks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      task: input,
+    }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setTasks([...tasks, data.task]);
+      setInput(""); //clears input box
+    });
 
-    setTasks([...tasks, trimmedInput]);
-    setInput('');
-  };
+};
 
     //arrow fnction . stored inside constant 
     //it is called when th ebutton is clicked
@@ -32,16 +51,50 @@ function App() {
   //here it is copying all the items from tasks and adds new input at the end
 
   
-  const handleDeleteTask = (index) => {
-    const newTasks = tasks.filter((_, i) => i !== index);
-    setTasks  (newTasks);
-  };
+  const handleDeleteTask = (id) => {
+
+  fetch(`http://localhost:5000/tasks/${id}`, {
+    method: "DELETE"
+  })
+  .then((res) => res.json())
+  .then(() => {
+    setTasks(tasks.filter(task => task.id !== id));
+  });
+
+};
+  // we remove task from frontend state
   // task.filter is looping thru array 
   // _ is a placeholder for the current task value
   // i is the index of the current task in the array
   // i !== index means that we want to keep all tasks except the one at the specified index
   // setTasks is updating the state with the new array of tasks after deletion
   
+
+  const handleEditTask = (id) => {
+
+  const newTask = prompt("Enter updated task");
+
+  if (!newTask) return;
+
+  fetch(`http://localhost:5000/tasks/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ task: newTask })
+  })
+  .then((res) => res.json())
+  .then((data) => {
+
+    const updatedTasks = tasks.map((t) =>
+      t.id === id ? data.task : t
+    );
+
+    setTasks(updatedTasks);
+
+  });
+
+};
 
   return (
     <div style={{ padding: "20px" }}>
@@ -63,22 +116,22 @@ function App() {
       Add Task
       </button>
 
-      <ul>
-  {tasks.length === 0 ? (
-    <p>No tasks yet 🚀</p>
-  ) : (
-    tasks.map((task, index) => (
-      <li key={index}>
-        {task}
-        <button
-          style={{ marginLeft: "10px", color: "red" }}
-          onClick={() => handleDeleteTask(index)}
-        >
-          ❌
-        </button>
-      </li>
-    ))
-  )}
+  <ul>
+  {tasks.map((task) => (  //tasks.map loops thru array 
+    <li key={task.id}>
+
+      {task.task}
+
+      <button onClick={() => handleEditTask(task.id)}>
+        ✏️
+      </button>
+
+      <button onClick={() => handleDeleteTask(task.id)}>
+        ❌
+      </button>
+
+    </li>
+  ))}
 </ul>
     </div>
   );  
